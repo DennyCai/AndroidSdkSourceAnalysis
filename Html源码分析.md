@@ -30,4 +30,4 @@ Html能够通过Html标签来为文字设置样式，让TextView显示富文本�
     }
 ```
 运行效果:
-![Html](https://github.com/DennyCai/AndroidSdkSourceAnalysis/img/show.jpg)
+![Html](https://github.com/DennyCai/AndroidSdkSourceAnalysis/blob/master/img/show.jpg?raw=true)
