@@ -20,7 +20,7 @@ Html能够通过Html标签来为文字设置样式，让TextView显示富文本�
                 "<h2>标题二</h2>" +
                 "<h3>标题三</h3>" +
                 "<h4>标题四</h4>" +
-                "<img src='https://github.com/fluidicon.png'/>" +
+                "<img src='ic_launcher'/>" +
                 "<blockquote>引用</blockquote>" +
                 "<div>块</div>" +
                 "<u>下划线</u><br/>" +
@@ -32,3 +32,10 @@ Html能够通过Html标签来为文字设置样式，让TextView显示富文本�
 运行效果:
 
 ![Html](https://github.com/DennyCai/AndroidSdkSourceAnalysis/blob/master/img/show.jpg?raw=true)
+
+在Demo中发现使用`<img>`标签都显示小方块,解决这个问题的办法是调用`Html.fromHtml(String,Html.ImageGetter,Html.TagHandler)`的重载方法，并传入自定义的`Html.ImageGetter`对象，重写`getDrawable`方法，代码如下：
+
+```java
+	
+
+```
