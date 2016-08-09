@@ -36,6 +36,18 @@ Html能够通过Html标签来为文字设置样式，让TextView显示富文本�
 在Demo中发现使用`<img>`标签都显示小方块,解决这个问题的办法是调用`Html.fromHtml(String,Html.ImageGetter,Html.TagHandler)`的重载方法，并传入自定义的`Html.ImageGetter`对象，重写`getDrawable`方法，代码如下：
 
 ```java
-	
-
+	Html.ImageGetter getter = new Html.ImageGetter() {
+            @Override
+            public Drawable getDrawable(String source) {
+                int id = getResources().getIdentifier(source,"mipmap",getPackageName());
+                Drawable drawable = getResources().getDrawable(id);
+                //必须设置手动设置drawable大小，否则无法显示
+                drawable.setBounds(0,0,drawable.getIntrinsicWidth(),drawable.getIntrinsicHeight());
+                return drawable;
+            }
+        };
+    textView.setText( Html.fromHtml(htmlString,getter,null));
 ```
+运行效果:
+
+![Html](https://github.com/DennyCai/AndroidSdkSourceAnalysis/blob/master/img/showimg.png?raw=true)
