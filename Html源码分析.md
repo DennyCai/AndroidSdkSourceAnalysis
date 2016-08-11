@@ -226,3 +226,4 @@ public static Spanned fromHtml(String source, ImageGetter imageGetter,
 ```
 
 源代码中并没有包含Parser对象，根据`import org.ccil.cowan.tagsoup.Parser;`和`fromHtml`注释可知，Html解析器是使用[Tagsoup](http://home.ccil.org/~cowan/XML/tagsoup/)库来解析Html标签，为什么会选择该库，进行一番搜索得知[Tagsoup](http://home.ccil.org/~cowan/XML/tagsoup/)是兼容`SAX`的解析器，我们知道对XML常见的的解析方式还有`DOM`、Android系统中还使用`PULL`解析与`SAX`同样是基于事件驱动模型，之所有使用tagsoup是因为该库可以良好的解析Html，我们都知道Html有时候并不像XML那样标签都需要闭合，例如`<br>`也是一个有效的标签，但是XML中则是不良格式。
+
