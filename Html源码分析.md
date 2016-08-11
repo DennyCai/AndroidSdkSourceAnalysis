@@ -115,6 +115,114 @@ Html能够通过Html标签来为文字设置样式，让TextView显示富文本�
 <sup><sup><b><u>&#32452;</u></b></sup></sup><sup><b><u>&#21512;</u></b></sup><b><u>&#26679;&#24335;</u></b><sub><b><u>&#23383;</u></b></sub><sub><sub><b><u>&#20307;</u></b></sub></sub></p>
 ```
 
-`Html.escapeHtml`方法则是把Html标签去除，只返回转译后的字符串。
+`Html.escapeHtml`方法则是将Html标签进行转译,例如`<p dir="ltr">`变转译成`&lt;p dir="ltr"&gt;`。
 
 ## 3、原理分析
+
+### 3.1、初探Html类
+
+```java
+/**
+ * 该类将HTML处理成带样式的文本，但不支持所有的HTML标签
+ */
+public class Html {
+    
+    /**
+     * 为<img>标签提供图片检索功能
+     */
+    public static interface ImageGetter {
+        /**
+         * 当HTML解析器解析到<img>标签时，source参数为标签中的src的属性值，
+         * 返回值必须为Drawable;如果返回null则会使用小方块来显示，如前面所见，
+         * 并需要调用Drawable.setBounds()方法来设置大小，否则无法显示图片。
+         * @param source:
+         */
+        public Drawable getDrawable(String source);
+    }
+
+    /**
+     * HTML标签解析扩展接口
+     */
+    public static interface TagHandler {
+        /**
+         * 当解析器解析到本身不支持或用户自定义的标签时，该方法会被调用
+         * @param opening:标签是否打开
+         * @param tag:标签名
+         * @param output:截止到当前标签，解析到的文本内容
+         * @param xmlReader:解析器对象
+         */
+        public void handleTag(boolean opening, String tag,
+                                 Editable output, XMLReader xmlReader);
+    }
+
+    private Html() { }
+
+    /**
+     * 返回样式文本，所有<img>标签都会显示为一个小方块
+     * 使用TagSoup库处理HTML
+     * @param source:带有html标签字符串
+     */
+    public static Spanned fromHtml(String source) {
+        return fromHtml(source, null, null);
+    }
+
+    /**
+     * 可传入ImageGetter来获取图片源，TagHandler添加支持其他标签
+     */
+    public static Spanned fromHtml(String source, ImageGetter imageGetter,
+                                   TagHandler tagHandler) {
+        .....
+    }
+
+    /**
+     * 将带样式文本反向解析成带Html的字符串，注意这个方法并不是还原成fromHtml接收的带Html标签文本
+     */
+    public static String toHtml(Spanned text) {
+        StringBuilder out = new StringBuilder();
+        withinHtml(out, text);
+        return out.toString();
+    }
+
+    /**
+     * 返回转译标签后的字符串
+     */
+    public static String escapeHtml(CharSequence text) {
+        StringBuilder out = new StringBuilder();
+        withinStyle(out, text, 0, text.length());
+        return out.toString();
+    }
+
+    /**
+     * 懒加载HTML解析器的Holder
+     * a) zygote对其进行预加载
+     * b) 直到需要的时候才加载
+     */
+    private static class HtmlParser {
+        private static final HTMLSchema schema = new HTMLSchema();
+    }
+
+```
+
+### 3.2、从fromHtml开始
+Html类主要方法就`4`个，功能也简单，生成带样式的`fromHtml`方法最总都是调用重载3个参数的方法。
+```java
+public static Spanned fromHtml(String source, ImageGetter imageGetter,
+                                   TagHandler tagHandler) {
+    //初始化解析器
+    Parser parser = new Parser();
+    try {
+        parser.setProperty(Parser.schemaProperty, HtmlParser.schema);
+    } catch (org.xml.sax.SAXNotRecognizedException e) {
+        // 不该出现的异常
+        throw new RuntimeException(e);
+    } catch (org.xml.sax.SAXNotSupportedException e) {
+        // 不该出现的异常
+        throw new RuntimeException(e);
+    }
+    HtmlToSpannedConverter converter =
+            new HtmlToSpannedConverter(source, imageGetter, tagHandler,parser);
+    return converter.convert();
+}
+```
+
+源代码中并没有包含Parser对象，根据`import org.ccil.cowan.tagsoup.Parser;`和`fromHtml`注释可知，Html解析器是使用[Tagsoup](http://home.ccil.org/~cowan/XML/tagsoup/)库来解析Html标签，为什么会选择该库，进行一番搜索得知[Tagsoup](http://home.ccil.org/~cowan/XML/tagsoup/)是兼容`SAX`的解析器，我们知道对XML常见的的解析方式还有`DOM`、Android系统中还使用`PULL`解析与`SAX`同样是基于事件驱动模型，之所有使用tagsoup是因为该库可以良好的解析Html，我们都知道Html有时候并不像XML那样标签都需要闭合，例如`<br>`也是一个有效的标签，但是XML中则是不良格式。

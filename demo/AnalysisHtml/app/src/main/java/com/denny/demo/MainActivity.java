@@ -24,19 +24,20 @@ import org.xml.sax.XMLReader;
 
 public class MainActivity extends AppCompatActivity {
 
+    strictfp
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        TextView textView = (TextView) findViewById(R.id.tv);
-        WebView wv = (WebView) findViewById(R.id.wv);
+        TextView textView = (TextView) findViewById(R.id.tv);
+//        WebView wv = (WebView) findViewById(R.id.wv);
         String htmlString =
                 "<font color='#ff0000'>颜色</font><br/>" +
                         "<a href='http://www.baidu.com'>链接</a><>br/>" +
                         "<big>大字体</big><br/>"+
                         "<small>小字体</small><br/>"+
-                        "<b>加粗</b><br/>"+
+                        "<b>加粗</b><br>"+
                         "<i>斜体</i><br/>" +
                         "<h1>标题一</h1>" +
                         "<h2>标题二</h2>" +
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
                 return drawable;
             }
         };
+
         Html.TagHandler tagHandler = new Html.TagHandler() {
             int start = -1;
             int end = -1;
@@ -77,8 +79,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-//        textView.setText( Html.fromHtml("<br/><custom>自定义标签</custom>",getter,tagHandler));
+        textView.setText( Html.fromHtml("<br/><custom>自定义标签</custom>",getter,tagHandler));
 //        wv.loadData(Html.toHtml(Html.fromHtml(htmlString)),"text/html", "utf-8");
-//        System.out.println(Html.escapeHtml(Html.fromHtml(htmlString)));
+//        System.out.println(Html.escapeHtml(Html.toHtml(Html.fromHtml(htmlString))));
     }
 }
