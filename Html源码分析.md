@@ -211,19 +211,188 @@ public static Spanned fromHtml(String source, ImageGetter imageGetter,
     //初始化解析器
     Parser parser = new Parser();
     try {
+        //配置解析Html模式
         parser.setProperty(Parser.schemaProperty, HtmlParser.schema);
     } catch (org.xml.sax.SAXNotRecognizedException e) {
-        // 不该出现的异常
         throw new RuntimeException(e);
     } catch (org.xml.sax.SAXNotSupportedException e) {
-        // 不该出现的异常
         throw new RuntimeException(e);
     }
+    //初始化真正的解析器
     HtmlToSpannedConverter converter =
             new HtmlToSpannedConverter(source, imageGetter, tagHandler,parser);
     return converter.convert();
 }
 ```
 
-源代码中并没有包含Parser对象，根据`import org.ccil.cowan.tagsoup.Parser;`和`fromHtml`注释可知，Html解析器是使用[Tagsoup](http://home.ccil.org/~cowan/XML/tagsoup/)库来解析Html标签，为什么会选择该库，进行一番搜索得知[Tagsoup](http://home.ccil.org/~cowan/XML/tagsoup/)是兼容`SAX`的解析器，我们知道对XML常见的的解析方式还有`DOM`、Android系统中还使用`PULL`解析与`SAX`同样是基于事件驱动模型，之所有使用tagsoup是因为该库可以良好的解析Html，我们都知道Html有时候并不像XML那样标签都需要闭合，例如`<br>`也是一个有效的标签，但是XML中则是不良格式。
+源代码中并没有包含Parser对象，根据`import org.ccil.cowan.tagsoup.Parser;`和`fromHtml`注释可知，HTML解析器是使用[Tagsoup](http://home.ccil.org/~cowan/XML/tagsoup/)库来解析HTML标签，为什么会选择该库，进行一番搜索得知[Tagsoup](http://home.ccil.org/~cowan/XML/tagsoup/)是兼容`SAX`的解析器，我们知道对XML常见的的解析方式还有`DOM`、Android系统中还使用`PULL`解析与`SAX`同样是基于事件驱动模型，之所有使用tagsoup是因为该库可以将HTML转化为XML，我们都知道HTML有时候并不像XML那样标签都需要闭合，例如`<br>`也是一个有效的标签，但是XML中则是不良格式。详情可见官方网站，但是好像没有开发文档，这里就不详细说明，只关注`SAX`解析过程。
 
+### 3.3、HtmlToSpannedConverter原理
+
+```java
+class HtmlToSpannedConverter implements ContentHandler {
+
+    private static final float[] HEADER_SIZES = {
+        1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f,
+    };
+
+    private String mSource;
+    private XMLReader mReader;
+    private SpannableStringBuilder mSpannableStringBuilder;
+    private Html.ImageGetter mImageGetter;
+    private Html.TagHandler mTagHandler;
+
+    public HtmlToSpannedConverter(
+            String source, Html.ImageGetter imageGetter, Html.TagHandler tagHandler,
+            Parser parser) {
+        mSource = source;
+        mSpannableStringBuilder = new SpannableStringBuilder();
+        mImageGetter = imageGetter;
+        mTagHandler = tagHandler;
+        mReader = parser;
+    }
+
+    public Spanned convert() {
+        //设置内容处理器
+        mReader.setContentHandler(this);
+        try {
+            //开始解析
+            mReader.parse(new InputSource(new StringReader(mSource)));
+        } catch (IOException e) {
+            // We are reading from a string. There should not be IO problems.
+            throw new RuntimeException(e);
+        } catch (SAXException e) {
+            // TagSoup doesn't throw parse exceptions.
+            throw new RuntimeException(e);
+        }
+        //省略
+        ...
+        ...
+        return mSpannableStringBuilder;
+    }
+```
+
+重点关注`convert`里面的`setContentHandler`方法，该方法接收的是`ContentHandler`接口，使用过`SAX`解析的读者应该不陌生，该接口定义了一系列`SAX`解析事件的方法
+```java
+public interface ContentHandler
+{
+    //设置文档定位器
+    public void setDocumentLocator (Locator locator);
+    //文档开始解析事件
+    public void startDocument ()
+    throws SAXException;
+    //文档结束解析事件
+    public void endDocument()
+    throws SAXException;
+    //解析到命名空间前缀事件
+    public void startPrefixMapping (String prefix, String uri)
+    throws SAXException;
+    //结束命名空间事件
+    public void endPrefixMapping (String prefix)
+    throws SAXException;
+    //解析到标签事件
+    public void startElement (String uri, String localName,
+                  String qName, Attributes atts)
+    throws SAXException;
+    //标签结束事件
+    public void endElement (String uri, String localName,
+                String qName)
+    throws SAXException;
+    //标签中内容事件
+    public void characters (char ch[], int start, int length)
+    throws SAXException;
+    //可忽略的空格事件
+    public void ignorableWhitespace (char ch[], int start, int length)
+    throws SAXException;
+    //处理指令事件
+    public void processingInstruction (String target, String data)
+    throws SAXException;
+    //忽略标签事件
+    public void skippedEntity (String name)
+    throws SAXException;
+}
+```
+对应`HtmlToSpannedConverter`中的实现。
+```java
+public void setDocumentLocator(Locator locator) {}
+public void startDocument() throws SAXException {}
+public void endDocument() throws SAXException {}
+public void startPrefixMapping(String prefix, String uri) throws SAXException {}
+public void endPrefixMapping(String prefix) throws SAXException {}
+public void startElement(String uri, String localName, String qName, Attributes attributes)
+        throws SAXException {
+    handleStartTag(localName, attributes);
+}
+public void endElement(String uri, String localName, String qName) throws SAXException {
+    handleEndTag(localName);
+}
+public void characters(char ch[], int start, int length) throws SAXException {
+    StringBuilder sb = new StringBuilder();
+    //忽略
+    ...
+}
+public void ignorableWhitespace(char ch[], int start, int length) throws SAXException {}
+public void processingInstruction(String target, String data) throws SAXException {}
+public void skippedEntity(String name) throws SAXException {}
+```
+
+我们发现该类中只实现了`startElement`，`endElement`，`characters`这三个方法，所以只关心标签的类型和标签里的字符。然后调用`mReader.parse`方法，开始对HTML进行解析。但遇到标签是，`startElement`方法将会被回调，在该方法中会调用`handlerStartTag`方法。
+
+```java
+/**
+ * @param tag：标签类型
+ * @param attributes：属性值
+ * 例如遇到<font color='#FFFFFF'>标签，tag="font",attributes={"color":"#FFFFFF"}
+ */
+private void handleStartTag(String tag, Attributes attributes) {
+    if (tag.equalsIgnoreCase("br")) {
+        // 我们不需要关心br标签是否有闭合，因为Tagsoup会帮我们处理
+    } else if (tag.equalsIgnoreCase("p")) {
+        handleP(mSpannableStringBuilder);
+    } else if (tag.equalsIgnoreCase("div")) {
+        handleP(mSpannableStringBuilder);
+    } else if (tag.equalsIgnoreCase("strong")) {
+        start(mSpannableStringBuilder, new Bold());
+    } else if (tag.equalsIgnoreCase("b")) {
+        start(mSpannableStringBuilder, new Bold());
+    } else if (tag.equalsIgnoreCase("em")) {
+        start(mSpannableStringBuilder, new Italic());
+    } else if (tag.equalsIgnoreCase("cite")) {
+        start(mSpannableStringBuilder, new Italic());
+    } else if (tag.equalsIgnoreCase("dfn")) {
+        start(mSpannableStringBuilder, new Italic());
+    } else if (tag.equalsIgnoreCase("i")) {
+        start(mSpannableStringBuilder, new Italic());
+    } else if (tag.equalsIgnoreCase("big")) {
+        start(mSpannableStringBuilder, new Big());
+    } else if (tag.equalsIgnoreCase("small")) {
+        start(mSpannableStringBuilder, new Small());
+    } else if (tag.equalsIgnoreCase("font")) {
+        startFont(mSpannableStringBuilder, attributes);
+    } else if (tag.equalsIgnoreCase("blockquote")) {
+        handleP(mSpannableStringBuilder);
+        start(mSpannableStringBuilder, new Blockquote());
+    } else if (tag.equalsIgnoreCase("tt")) {
+        start(mSpannableStringBuilder, new Monospace());
+    } else if (tag.equalsIgnoreCase("a")) {
+        startA(mSpannableStringBuilder, attributes);
+    } else if (tag.equalsIgnoreCase("u")) {
+       start(mSpannableStringBuilder, new Underline());
+    } else if (tag.equalsIgnoreCase("sup")) {
+        start(mSpannableStringBuilder, new Super());
+    } else if (tag.equalsIgnoreCase("sub")) {
+        start(mSpannableStringBuilder, new Sub());
+    } else if (tag.length() == 2 &&
+               Character.toLowerCase(tag.charAt(0)) == 'h' &&
+               tag.charAt(1) >= '1' && tag.charAt(1) <= '6') {
+        handleP(mSpannableStringBuilder);
+         start(mSpannableStringBuilder, new Header(tag.charAt(1) - '1'));
+    } else if (tag.equalsIgnoreCase("img")) {
+        startImg(mSpannableStringBuilder, attributes, mImageGetter);
+    } else if (mTagHandler != null) {
+        mTagHandler.handleTag(true, tag, mSpannableStringBuilder, mReader);
+    }
+}
+```
+
+这里的方法比较多我挑其中几个有代表性的方法来解释。
