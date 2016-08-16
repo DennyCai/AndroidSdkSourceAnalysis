@@ -245,11 +245,11 @@ class HtmlToSpannedConverter implements ContentHandler {
     public HtmlToSpannedConverter(
             String source, Html.ImageGetter imageGetter, Html.TagHandler tagHandler,
             Parser parser) {
-        mSource = source;
-        mSpannableStringBuilder = new SpannableStringBuilder();
-        mImageGetter = imageGetter;
-        mTagHandler = tagHandler;
-        mReader = parser;
+        mSource = source;//html文本
+        mSpannableStringBuilder = new SpannableStringBuilder();//用于存放标签中的字符串
+        mImageGetter = imageGetter;//图片加载器
+        mTagHandler = tagHandler;//自定义标签器
+        mReader = parser;//解析器
     }
 
     public Spanned convert() {
@@ -271,8 +271,7 @@ class HtmlToSpannedConverter implements ContentHandler {
         return mSpannableStringBuilder;
     }
 ```
-
-重点关注`convert`里面的`setContentHandler`方法，该方法接收的是`ContentHandler`接口，使用过`SAX`解析的读者应该不陌生，该接口定义了一系列`SAX`解析事件的方法
+通过上面代码可以发现，`SpannableStringBuilder`是用来存放解析html标签中的字符串，类似`StringBuilder`，但它附带有样式的字符串。重点关注`convert`里面的`setContentHandler`方法，该方法接收的是`ContentHandler`接口，使用过`SAX`解析的读者应该不陌生，该接口定义了一系列`SAX`解析事件的方法。
 ```java
 public interface ContentHandler
 {
@@ -443,9 +442,45 @@ private void handleEndTag(String tag) {
             mTagHandler.handleTag(false, tag, mSpannableStringBuilder, mReader);
         }
     }
+//标签内容 ch[]:存放字符数组 start:开始位置，lenght:长度
+public void characters(char ch[], int start, int length) throws SAXException {
+        StringBuilder sb = new StringBuilder();
+        /*
+         * 忽略开头的空格或连续两个空格
+         * 换行符视为空格符
+         */
+        for (int i = 0; i < length; i++) {
+            char c = ch[i + start];
+
+            if (c == ' ' || c == '\n') {
+                char pred;
+                int len = sb.length();
+
+                if (len == 0) {
+                    len = mSpannableStringBuilder.length();
+
+                    if (len == 0) {//开头为空格符
+                        pred = '\n';
+                    } else {//获取上一个字符
+                        pred = mSpannableStringBuilder.charAt(len - 1);
+                    }
+                } else {//获取上一个字符
+                    pred = sb.charAt(len - 1);
+                }
+
+                if (pred != ' ' && pred != '\n') {//判断是否为连续空格
+                    sb.append(' ');
+                }
+            } else {//不是空格或不连续为空格则添加字符
+                sb.append(c);
+            }
+        }
+
+        mSpannableStringBuilder.append(sb);
+    }    
 ```
 
-从这两个方法中我们可以总结出支持的HTML标签列表
+从上面方法中我们可以总结出支持的HTML标签列表
 * br
 * p
 * div
@@ -467,3 +502,21 @@ private void handleEndTag(String tag) {
 * sub
 * h1-h6
 * img
+
+### 3、4 标签是如何处理的
+
+1、br标签
+
+这里分析如何处理`<br>`标签，在`handleStartTag`方法中可以发现br标签直接被忽略了，在`handleEndTag`方法中才被真正处理。
+```java
+if (tag.equalsIgnoreCase("br")) {
+    handleBr(mSpannableStringBuilder);
+}
+//代码很简单，直接加换行符
+private static void handleBr(SpannableStringBuilder text) {
+    text.append("\n");
+}
+
+```
+
+2、p标签 
