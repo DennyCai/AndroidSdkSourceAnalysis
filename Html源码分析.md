@@ -327,7 +327,6 @@ public void endElement(String uri, String localName, String qName) throws SAXExc
     handleEndTag(localName);
 }
 public void characters(char ch[], int start, int length) throws SAXException {
-    StringBuilder sb = new StringBuilder();
     //忽略
     ...
 }
@@ -336,7 +335,9 @@ public void processingInstruction(String target, String data) throws SAXExceptio
 public void skippedEntity(String name) throws SAXException {}
 ```
 
-我们发现该类中只实现了`startElement`，`endElement`，`characters`这三个方法，所以只关心标签的类型和标签里的字符。然后调用`mReader.parse`方法，开始对HTML进行解析。但遇到标签是，`startElement`方法将会被回调，在该方法中会调用`handlerStartTag`方法。
+我们发现该类中只实现了`startElement`，`endElement`，`characters`这三个方法，所以只关心标签的类型和标签里的字符。然后调用`mReader.parse`方法，开始对HTML进行解析。解析的事件流如下：
+`startElement` -> `characters` -> `endElement`
+`startElemnt`里面调用的是`handleStartTag`方法，`endElement`则是调用`handleEndTag`方法。
 
 ```java
 /**
@@ -393,6 +394,76 @@ private void handleStartTag(String tag, Attributes attributes) {
         mTagHandler.handleTag(true, tag, mSpannableStringBuilder, mReader);
     }
 }
+//标签结束
+private void handleEndTag(String tag) {
+        if (tag.equalsIgnoreCase("br")) {
+            handleBr(mSpannableStringBuilder);
+        } else if (tag.equalsIgnoreCase("p")) {
+            handleP(mSpannableStringBuilder);
+        } else if (tag.equalsIgnoreCase("div")) {
+            handleP(mSpannableStringBuilder);
+        } else if (tag.equalsIgnoreCase("strong")) {
+            end(mSpannableStringBuilder, Bold.class, new StyleSpan(Typeface.BOLD));
+        } else if (tag.equalsIgnoreCase("b")) {
+            end(mSpannableStringBuilder, Bold.class, new StyleSpan(Typeface.BOLD));
+        } else if (tag.equalsIgnoreCase("em")) {
+            end(mSpannableStringBuilder, Italic.class, new StyleSpan(Typeface.ITALIC));
+        } else if (tag.equalsIgnoreCase("cite")) {
+            end(mSpannableStringBuilder, Italic.class, new StyleSpan(Typeface.ITALIC));
+        } else if (tag.equalsIgnoreCase("dfn")) {
+            end(mSpannableStringBuilder, Italic.class, new StyleSpan(Typeface.ITALIC));
+        } else if (tag.equalsIgnoreCase("i")) {
+            end(mSpannableStringBuilder, Italic.class, new StyleSpan(Typeface.ITALIC));
+        } else if (tag.equalsIgnoreCase("big")) {
+            end(mSpannableStringBuilder, Big.class, new RelativeSizeSpan(1.25f));
+        } else if (tag.equalsIgnoreCase("small")) {
+            end(mSpannableStringBuilder, Small.class, new RelativeSizeSpan(0.8f));
+        } else if (tag.equalsIgnoreCase("font")) {
+            endFont(mSpannableStringBuilder);
+        } else if (tag.equalsIgnoreCase("blockquote")) {
+            handleP(mSpannableStringBuilder);
+            end(mSpannableStringBuilder, Blockquote.class, new QuoteSpan());
+        } else if (tag.equalsIgnoreCase("tt")) {
+            end(mSpannableStringBuilder, Monospace.class,
+                    new TypefaceSpan("monospace"));
+        } else if (tag.equalsIgnoreCase("a")) {
+            endA(mSpannableStringBuilder);
+        } else if (tag.equalsIgnoreCase("u")) {
+            end(mSpannableStringBuilder, Underline.class, new UnderlineSpan());
+        } else if (tag.equalsIgnoreCase("sup")) {
+            end(mSpannableStringBuilder, Super.class, new SuperscriptSpan());
+        } else if (tag.equalsIgnoreCase("sub")) {
+            end(mSpannableStringBuilder, Sub.class, new SubscriptSpan());
+        } else if (tag.length() == 2 &&
+                Character.toLowerCase(tag.charAt(0)) == 'h' &&
+                tag.charAt(1) >= '1' && tag.charAt(1) <= '6') {
+            handleP(mSpannableStringBuilder);
+            endHeader(mSpannableStringBuilder);
+        } else if (mTagHandler != null) {
+            mTagHandler.handleTag(false, tag, mSpannableStringBuilder, mReader);
+        }
+    }
 ```
 
-这里的方法比较多我挑其中几个有代表性的方法来解释。
+从这两个方法中我们可以总结出支持的HTML标签列表
+* br
+* p
+* div
+* strong
+* b
+* em
+* cite
+* dfn
+* i
+* big
+* small
+* font
+* blockquote
+* tt
+* monospace
+* a
+* u
+* sup
+* sub
+* h1-h6
+* img
