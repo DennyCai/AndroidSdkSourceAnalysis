@@ -3,6 +3,8 @@ Html源码分析
 
 > 代码版本：**Android API 23**
 
+
+
 ## 1.简介
 
 Html能够通过Html标签来为文字设置样式，让TextView显示富文本信息，其只支持部分标签不是全部，具体支持哪些标签将分析中揭晓。
@@ -505,12 +507,16 @@ public void characters(char ch[], int start, int length) throws SAXException {
 
 ### 3、4 标签是如何处理的
 
-1、br标签
+#### 1. br标签
 
 这里分析如何处理`<br>`标签，在`handleStartTag`方法中可以发现br标签直接被忽略了，在`handleEndTag`方法中才被真正处理。
 ```java
-if (tag.equalsIgnoreCase("br")) {
-    handleBr(mSpannableStringBuilder);
+private void handleEndTag(String tag) {
+    ...
+    if (tag.equalsIgnoreCase("br")) {
+        handleBr(mSpannableStringBuilder);
+    }
+    ...
 }
 //代码很简单，直接加换行符
 private static void handleBr(SpannableStringBuilder text) {
@@ -519,4 +525,212 @@ private static void handleBr(SpannableStringBuilder text) {
 
 ```
 
-2、p标签 
+#### 2. p标签 
+
+p标签为段落，其作用是给p标签中的文字前后换行，在`handleStartTag`和`handleEndTag`遇到p标签都是调用`handleP`方法，`characters`则添加p标签之间的字符串。
+
+```java
+private void handleStartTag(String tag, Attributes attributes) {
+    ...
+    else if (tag.equalsIgnoreCase("p")) {
+        handleP(mSpannableStringBuilder);
+    }
+    ...
+}
+
+private void handleEndTag(String tag) {
+    ...
+    else if (tag.equalsIgnoreCase("p")) {
+        handleP(mSpannableStringBuilder);
+    }   
+    ...
+}
+
+private static void handleP(SpannableStringBuilder text) {
+    int len = text.length();
+
+    if (len >= 1 && text.charAt(len - 1) == '\n') {
+        if (len >= 2 && text.charAt(len - 2) == '\n') {
+            //如果前面两个字符都为换行符，则忽略
+            return;
+        }
+        //否则添加一个换行符
+        text.append("\n");
+        return;
+    }
+    //其他情况添加两个换行符
+    if (len != 0) {
+        text.append("\n\n");
+    }
+}
+```
+
+#### 3. strong标签
+
+该标签作用是为加粗字体，在`handleStartTag`和`handleEndTag`分别调用`start`和`end`方法。
+
+```java
+private void handleStartTag(String tag, Attributes attributes) {
+    ...
+    else if (tag.equalsIgnoreCase("strong")) {
+        start(mSpannableStringBuilder, new Bold());
+    }
+    ...
+}
+
+private static class Bold { }//什么都没有
+
+private void handleEndTag(String tag) {
+    ...
+    else if (tag.equalsIgnoreCase("strong")) {
+        end(mSpannableStringBuilder, Bold.class, new StyleSpan(Typeface.BOLD));
+    }   
+    ...
+}
+
+private static void start(SpannableStringBuilder text, Object mark) {
+    int len = text.length();
+    //mark作为类型标记并没有实际功能，指明开始的位置，
+    //结束位置延迟到`end`方法中处理，
+    //Spannable.SPAN_MARK_MARK表示当文本插入偏移时，它们仍然保持在它们的原始偏移量上。从概念上讲，文本是在标记之后添加的。
+    text.setSpan(mark, len, len, Spannable.SPAN_MARK_MARK);
+}
+
+private static void end(SpannableStringBuilder text, Class kind,Object repl) {
+    //当前字符长度
+    int len = text.length();
+    //根据kind获取最后一个set进去的对象
+    Object obj = getLast(text, kind);
+    //获取标签起始位置
+    int where = text.getSpanStart(obj);
+    //去除标记对象
+    text.removeSpan(obj);
+
+    if (where != len) {
+        //len则为结束的位置，Spannable.SPAN_EXCLUSIVE_EXCLUSIVE是设置样式文字区间为闭区间
+        //将真正的样式对象repl设置进去，Bold对应StyleSpan类型，Typeface.BOLD 加粗样式
+        text.setSpan(repl, where, len, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+}
+
+private static Object getLast(Spanned text, Class kind) {
+    /*
+     * 获取最后一个类型为king，在setSpan传入的对象
+     * 例如kind类型为Bold.class，则会返回在start中set进去的Bold对象
+     */
+    Object[] objs = text.getSpans(0, text.length(), kind);
+
+    if (objs.length == 0) {
+        return null;
+    } else {
+        //如果有期间有多个，则获取最后一个
+        return objs[objs.length - 1];
+    }
+}
+
+```
+
+经过`start`和`end`方法处理后，`strong`标签中的文本就被加粗，具体的样式类型这里不做详解，后续可以参考[Spannable源码解析](https://github.com/LittleFriendsGroup/AndroidSdkSourceAnalysis)这篇**目前还没人认领**文章，其他为字体设置不同的样式过程一致，在`handleStartTag`根据不同标签类型调用`start`时方法传入不同对象给mark，并在`handleEndTag`中不同标签调用`end`并传入不同样式。
+
+#### 4. font标签
+
+`font`标签可以给字符串指定颜色和字体。
+
+
+```java
+private void handleStartTag(String tag, Attributes attributes) {
+    ...
+    else if (tag.equalsIgnoreCase("font")) {
+        //attributes带有标签中的属性
+        //例如<font color="#FFFFFF">,属性将以key-value的形式存在，{"color":"#FFFFFF"}。
+        startFont(mSpannableStringBuilder, attributes);
+    }
+    ...
+}
+
+private static void startFont(SpannableStringBuilder text,Attributes attributes) {
+    String color = attributes.getValue("", "color");//获取color属性
+    String face = attributes.getValue("", "face");//获取face属性
+
+    int len = text.length();
+    //Font同样是一个用来标记属性的对象，没有实际功能
+    text.setSpan(new Font(color, face), len, len, Spannable.SPAN_MARK_MARK);
+}
+
+//保存颜色值和字体类型
+private static class Font {
+    public String mColor;
+    public String mFace;
+
+    public Font(String color, String face) {
+        mColor = color;
+        mFace = face;
+    }
+}
+
+private void handleEndTag(String tag) {
+    ...
+    else if (tag.equalsIgnoreCase("font")) {
+        endFont(mSpannableStringBuilder);
+    }   
+    ...
+}
+
+private static void endFont(SpannableStringBuilder text) {
+    int len = text.length();
+    Object obj = getLast(text, Font.class);
+    int where = text.getSpanStart(obj);
+
+    text.removeSpan(obj);
+
+    if (where != len) {
+        Font f = (Font) obj;
+        //前面与strong标签解析过程相似，多了下面处理颜色和字体的逻辑
+        if (!TextUtils.isEmpty(f.mColor)) {
+            //如果color属性中以"@"开头，则是获取colorId对应的颜色值
+            //注意：只能支持android.R的资源
+            if (f.mColor.startsWith("@")) {
+                Resources res = Resources.getSystem();
+                String name = f.mColor.substring(1);
+                int colorRes = res.getIdentifier(name, "color", "android");
+                if (colorRes != 0) {
+                    //也可以是color selector，则会根据不同状态显示不同颜色
+                    ColorStateList colors = res.getColorStateList(colorRes, null);
+                    //设置颜色
+                    text.setSpan(new TextAppearanceSpan(null, 0, 0, colors, null),
+                            where, len,
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            } else {
+                //如果为"#"开头则解析颜色值
+                int c = Color.getHtmlColor(f.mColor);
+                if (c != -1) {
+                    text.setSpan(new ForegroundColorSpan(c | 0xFF000000),
+                            where, len,
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            }
+        }
+        if (f.mFace != null) {
+            //如果有face参数则解析字体，更进去看支持什么样的字体
+            text.setSpan(new TypefaceSpan(f.mFace), where, len,
+                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+}
+
+```
+
+在`TypefaceSpan`的`apply`方法中会先去解析对应的字体，然后绘制出来，源码如下。
+
+```java
+private static void apply(Paint paint, String family) {
+        ...
+        //解析字体
+        Typeface tf = Typeface.create(family, oldStyle);
+        ...
+    }
+
+
+```
+

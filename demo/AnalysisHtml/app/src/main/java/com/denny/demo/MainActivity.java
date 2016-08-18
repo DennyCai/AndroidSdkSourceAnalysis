@@ -16,6 +16,8 @@ import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.text.style.BulletSpan;
 import android.text.style.ImageSpan;
+import android.text.style.StyleSpan;
+import android.text.style.TypefaceSpan;
 import android.util.Xml;
 import android.webkit.WebView;
 import android.widget.TextView;
@@ -72,7 +74,8 @@ public class MainActivity extends AppCompatActivity implements ContentHandler {
                 return drawable;
             }
         };
-
+        TypefaceSpan span
+        Color.getHtmlColor()
         Html.TagHandler tagHandler = new Html.TagHandler() {
             int start = -1;
             int end = -1;
