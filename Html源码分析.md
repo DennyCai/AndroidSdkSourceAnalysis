@@ -55,7 +55,7 @@ Html能够通过Html标签来为文字设置样式，让TextView显示富文本�
 
 ![Html](https://github.com/DennyCai/AndroidSdkSourceAnalysis/blob/master/img/showimg.png?raw=true)
 
-原生支持的Html标签优先，为了方便扩张，我们可以通过自定义`Html.TagHandler`来支持自定义标签显示效果，代码如下：
+原生支持的Html标签优先，为了方便扩展，我们可以通过自定义`Html.TagHandler`来支持自定义标签显示效果，代码如下：
 
 ```java
 	Html.TagHandler tagHandler = new Html.TagHandler() {
@@ -83,7 +83,7 @@ Html能够通过Html标签来为文字设置样式，让TextView显示富文本�
 
 ![TagHandler](https://github.com/DennyCai/AndroidSdkSourceAnalysis/blob/master/img/custmtag.png?raw=true)
 
-使用`Html.toHtml`方法能够将带有样式效果的Spanned文本对象生成对应的Html格式，但部分样式可能会丢失，下面为WebView显示效果，部分效果与上面TextView显示的效果有差异，代码如下：
+使用`Html.toHtml`方法能够将带有样式效果的Spanned文本对象生成对应的Html格式，标签内的字符会被转译成，下面为WebView显示效果，部分效果与上面TextView显示的效果有差异，代码如下：
 
 ```java
 	webView.loadData(Html.toHtml(Html.fromHtml(htmlString)),"text/html", "utf-8");
@@ -632,6 +632,7 @@ private static Object getLast(Spanned text, Class kind) {
 
 经过`start`和`end`方法处理后，`strong`标签中的文本就被加粗，具体的样式类型这里不做详解，后续可以参考[Spannable源码解析](https://github.com/LittleFriendsGroup/AndroidSdkSourceAnalysis)这篇**目前还没人认领**文章，其他为字体设置不同的样式过程一致，在`handleStartTag`根据不同标签类型调用`start`时方法传入不同对象给mark，并在`handleEndTag`中不同标签调用`end`并传入不同样式。
 
+
 #### 4. font标签
 
 `font`标签可以给字符串指定颜色和字体。
@@ -696,7 +697,7 @@ private static void endFont(SpannableStringBuilder text) {
                 if (colorRes != 0) {
                     //也可以是color selector，则会根据不同状态显示不同颜色
                     ColorStateList colors = res.getColorStateList(colorRes, null);
-                    //设置颜色
+                    //1、通过TextAppearanceSpan设置颜色
                     text.setSpan(new TextAppearanceSpan(null, 0, 0, colors, null),
                             where, len,
                             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -705,6 +706,7 @@ private static void endFont(SpannableStringBuilder text) {
                 //如果为"#"开头则解析颜色值
                 int c = Color.getHtmlColor(f.mColor);
                 if (c != -1) {
+                    //2、通过ForegroundColorSpan直接设置字体的rgb值
                     text.setSpan(new ForegroundColorSpan(c | 0xFF000000),
                             where, len,
                             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -712,7 +714,7 @@ private static void endFont(SpannableStringBuilder text) {
             }
         }
         if (f.mFace != null) {
-            //如果有face参数则解析字体，更进去看支持什么样的字体
+            //如果有face参数则通过TypefaceSpan设置字体
             text.setSpan(new TypefaceSpan(f.mFace), where, len,
                          Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
@@ -721,7 +723,7 @@ private static void endFont(SpannableStringBuilder text) {
 
 ```
 
-在`TypefaceSpan`的`apply`方法中会先去解析对应的字体，然后绘制出来，源码如下。
+具体支持哪些字体，在`TypefaceSpan`的`apply`方法中会先去解析对应的字体，然后绘制出来，源码如下。
 
 ```java
 private static void apply(Paint paint, String family) {
@@ -731,5 +733,150 @@ private static void apply(Paint paint, String family) {
         ...
     }
 
+```
+
+`Typeface`源码
+```java
+
+/**
+     * 根据字体名称获取字体对象，如果familyName为null，则返回默认字体对象
+     * 调用getStyle可查看该字体style属性
+     *
+     * @param 字体名称，可能为null
+     * @param style  NORMAL（标准）, BOLD（粗体）, ITALIC（斜体）, BOLD_ITALIC（粗斜）
+     * @return 匹配的字体
+     */
+    public static Typeface create(String familyName, int style) {
+        if (sSystemFontMap != null) {
+            //字体缓存在sSystemFontMap中
+            return create(sSystemFontMap.get(familyName), style);
+        }
+        return null;
+    }
+
+    //init方法中初始化sSystemFontMap
+ private static void init() {
+        // 获取字体配置文件目录
+        //private static File getSystemFontConfigLocation() {
+        //return new File("/system/etc/");
+        //}
+        File systemFontConfigLocation = getSystemFontConfigLocation();
+        //获取字体配置文件
+        //static final String FONTS_CONFIG = "fonts.xml";
+        File configFilename = new File(systemFontConfigLocation, FONTS_CONFIG);
+        try {
+            //将字体名称更Typeface对象缓存在map中
+            //具体解析过程忽略,有兴趣可自行翻阅源码
+            ....
+            sSystemFontMap = systemFonts;
+
+        } catch (RuntimeException e) {
+           ....
+        }
+    }
 
 ```
+
+具体支持的字体因不同系统而不同，这里附带一份某手机[fonts.xml文件]()。
+
+#### 5. img标签
+
+```java
+//img标签只有在标签开始时处理
+private void handleStartTag(String tag, Attributes attributes) {
+    ...
+    else if (tag.equalsIgnoreCase("img")) {
+            startImg(mSpannableStringBuilder, attributes, mImageGetter);
+    }
+    ...
+}
+
+//与其他标签处理过程多了Attributes标签属性，Html.ImageGetter 自定义图片获取
+private static void startImg(SpannableStringBuilder text,
+                                 Attributes attributes, Html.ImageGetter img) {
+        //获取src属性
+        String src = attributes.getValue("", "src");
+        Drawable d = null;
+
+        if (img != null) {
+            //调用自定义的图片获取方式，并传入src属性值
+            d = img.getDrawable(src);
+        }
+
+        if (d == null) {
+            //如果图片为空，则返回一个小方块
+            d = Resources.getSystem().
+                    getDrawable(com.android.internal.R.drawable.unknown_image);
+            d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+        }
+
+        int len = text.length();
+        //添加图片占位字符
+        text.append("\uFFFC");
+        //通过使用ImageSpan设置图片效果
+        text.setSpan(new ImageSpan(d, src), len, text.length(),
+                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+
+```
+
+#### 6. 自定义标签
+
+```java
+private void handleStartTag(String tag, Attributes attributes) {
+    ...
+    else if (mTagHandler != null) {//通过自定义标签处理器来扩展自定义标签
+            mTagHandler.handleTag(true, tag, mSpannableStringBuilder, mReader);
+    }
+    ...
+}
+
+private void handleEndTag(String tag) {
+    ...
+    else if (mTagHandler != null) {
+        //闭合标签
+        mTagHandler.handleTag(false, tag, mSpannableStringBuilder, mReader);
+    }
+    ...
+}
+
+```
+
+关于自定义标签有个小问题是，`handleTag`并没有传入`Attributes`标签属性，所以无法直接获取自定义标签的属性值，下面给出两种方案解决这个问题：
+1. 通过某一部分标签名作为属性值，例如`<custom>`标签，我们想加入id的参数，则可将标签名变为`<custom-id-123>`，然后在`handleTag`中自行解析。
+2. 通过反射`XMLReader`来获取属性值，具体例子可参考[stackoverflow:How to get an attribute from an XMLReader](http://stackoverflow.com/questions/6952243/how-to-get-an-attribute-from-an-xmlreader/36528149)
+
+### 3、5 convert方法剩下部分
+
+不要忽略了`parse`之后还有一部分代码。
+
+``java
+    // 修正段落标记范围
+    //ParagraphStyle为段落级别样式
+    Object[] obj = mSpannableStringBuilder.getSpans(0, mSpannableStringBuilder.length(), ParagraphStyle.class);
+    for (int i = 0; i < obj.length; i++) {
+        int start = mSpannableStringBuilder.getSpanStart(obj[i]);
+        int end = mSpannableStringBuilder.getSpanEnd(obj[i]);
+
+        // 去除末尾两个换行符
+        if (end - 2 >= 0) {
+            if (mSpannableStringBuilder.charAt(end - 1) == '\n' &&
+                mSpannableStringBuilder.charAt(end - 2) == '\n') {
+                end--;
+            }
+        }
+
+        if (end == start) {
+            //除去没有显示的样式
+            mSpannableStringBuilder.removeSpan(obj[i]);
+        } else {
+            //Spannable.SPAN_PARAGRAPH以换行符为起始点和终点
+            mSpannableStringBuilder.setSpan(obj[i], start, end, Spannable.SPAN_PARAGRAPH);
+        }
+    }
+
+    return mSpannableStringBuilder;
+```
+
+### 3、6 toHtml

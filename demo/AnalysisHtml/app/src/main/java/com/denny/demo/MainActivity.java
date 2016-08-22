@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.ActivityManagerNative;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.text.Editable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.Spanned;
+import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.BulletSpan;
 import android.text.style.ImageSpan;
@@ -74,8 +76,8 @@ public class MainActivity extends AppCompatActivity implements ContentHandler {
                 return drawable;
             }
         };
-        TypefaceSpan span
-        Color.getHtmlColor()
+//        TypefaceSpan span
+//        Color.getHtmlColor()
         Html.TagHandler tagHandler = new Html.TagHandler() {
             int start = -1;
             int end = -1;
@@ -94,9 +96,10 @@ public class MainActivity extends AppCompatActivity implements ContentHandler {
                 }
             }
         };
+//        Spannable.SPAN_PARAGRAPH
 //        "<br/><custom>自定义标签</custom>"
         textView.setText( Html.fromHtml(htmlString,getter,tagHandler));
-//        wv.loadData(Html.toHtml(Html.fromHtml(htmlString)),"text/html", "utf-8");
+        wv.loadData(Html.toHtml(Html.fromHtml(htmlString)),"text/html", "utf-8");
 //        System.out.println(Html.escapeHtml(Html.toHtml(Html.fromHtml(htmlString))));
 //        Parser parser = new Parser();
 //        try {
