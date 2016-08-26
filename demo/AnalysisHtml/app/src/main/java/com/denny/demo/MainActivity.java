@@ -18,6 +18,7 @@ import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.BulletSpan;
 import android.text.style.ImageSpan;
+import android.text.style.ParagraphStyle;
 import android.text.style.StyleSpan;
 import android.text.style.TypefaceSpan;
 import android.util.Xml;
@@ -98,8 +99,8 @@ public class MainActivity extends AppCompatActivity implements ContentHandler {
         };
 //        Spannable.SPAN_PARAGRAPH
 //        "<br/><custom>自定义标签</custom>"
-        textView.setText( Html.fromHtml(htmlString,getter,tagHandler));
-        wv.loadData(Html.toHtml(Html.fromHtml(htmlString)),"text/html", "utf-8");
+        textView.setText( Html.toHtml(Html.fromHtml(htmlString,getter,tagHandler)));
+//        wv.loadData(Html.toHtml(Html.fromHtml(htmlString)),"text/html", "utf-8");
 //        System.out.println(Html.escapeHtml(Html.toHtml(Html.fromHtml(htmlString))));
 //        Parser parser = new Parser();
 //        try {
@@ -117,6 +118,9 @@ public class MainActivity extends AppCompatActivity implements ContentHandler {
 //        } catch (SAXException e) {
 //            e.printStackTrace();
 //        }
+//        Spanned spanned = Html.fromHtml(htmlString);
+//        Object[] ps = spanned.getSpans(0,spanned.length(), ParagraphStyle.class);
+
     }
 
     @Override

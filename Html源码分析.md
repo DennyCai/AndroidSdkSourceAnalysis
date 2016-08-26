@@ -879,4 +879,217 @@ private void handleEndTag(String tag) {
     return mSpannableStringBuilder;
 ```
 
-### 3、6 toHtml
+### 3、6 toHtml解析
+
+理解该方法之前先看看`android.text.style`包中部分样式的UML图帮助理解：
+![uml](https://github.com/DennyCai/AndroidSdkSourceAnalysis/blob/master/img/uml-style.png?raw=true)
+
+根据uml可知，样式级别主要分为两类：一类是段落级别，另一类是字符级别。
+`toHtml`方法是从大范围级别到小范围级别解析，即先解析段落样式再解析字符样式。
+
+```java
+public static String toHtml(Spanned text) {
+    StringBuilder out = new StringBuilder();
+    withinHtml(out, text);
+    return out.toString();
+}
+
+private static void withinHtml(StringBuilder out, Spanned text) {
+    int len = text.length();
+    //遍历段落级别样式
+    int next;
+    for (int i = 0; i < text.length(); i = next) {
+        //返回样式类型出现的开始位置
+        next = text.nextSpanTransition(i, len, ParagraphStyle.class);
+        //返回从i位置到下个段落样式位置之前带有段落样式的数组，比较拗口，总之是一段一段取出来
+        ParagraphStyle[] style = text.getSpans(i, next, ParagraphStyle.class);
+        String elements = " ";
+        boolean needDiv = false;
+        //然后逐个判断是否为AlignmentSpan类型，是则加上<div align="">标签，align属性代表段落中字符对齐方向
+        for(int j = 0; j < style.length; j++) {
+            if (style[j] instanceof AlignmentSpan) {
+                Layout.Alignment align =
+                    ((AlignmentSpan) style[j]).getAlignment();
+                needDiv = true;
+                if (align == Layout.Alignment.ALIGN_CENTER) {
+                   elements = "align=\"center\" " + elements;
+                } else if (align == Layout.Alignment.ALIGN_OPPOSITE) {
+                    elements = "align=\"right\" " + elements;
+                } else {
+                   elements = "align=\"left\" " + elements;
+                }
+            }
+        }
+
+        if (needDiv) {//添加div标签
+            out.append("<div ").append(elements).append(">");
+        }
+        //解析段落样式中其他样式
+        withinDiv(out, text, i, next);
+        //调用层次较深，先忽略后面
+        ....
+    }
+
+//start为段落起点，end为结尾
+private static void withinDiv(StringBuilder out, Spanned text,int start, int end) {
+    int next;
+    for (int i = start; i < end; i = next) {
+        //查找引用样式
+        next = text.nextSpanTransition(i, end, QuoteSpan.class);
+        QuoteSpan[] quotes = text.getSpans(i, next, QuoteSpan.class);
+
+        for (QuoteSpan quote : quotes) {
+            out.append("<blockquote>");
+        }
+        //解析里面的样式
+        withinBlockquote(out, text, i, next);
+        //忽略
+        ....
+    }
+}
+
+private static void withinBlockquote(StringBuilder out, Spanned text,int start, int end) {
+    //解析文本显示方向
+    out.append(getOpenParaTagWithDirection(text, start, end));
+    ...
+    int next;
+    for (int i = start; i < end; i = next) {
+        next = TextUtils.indexOf(text, '\n', i, end);
+        if (next < 0) {
+           next = end;
+        }
+
+        int nl = 0;
+
+        while (next < end && text.charAt(next) == '\n') {
+            nl++;
+            next++;
+        }
+        if (withinParagraph(out, text, i, next - nl, nl, next == end)) {
+           ...
+        }
+
+        ...
+}
+
+private static String getOpenParaTagWithDirection(Spanned text, int start, int end) {
+    final int len = end - start;
+    final byte[] levels = ArrayUtils.newUnpaddedByteArray(len);//通过VMRuntime创建byte数组
+    final char[] buffer = TextUtils.obtain(len);//底层通过ArrayUtils.newUnpaddedCharArray(len);创建char数组
+    TextUtils.getChars(text, start, end, buffer, 0);//将字符缓存到buffer数组中
+    //通过bidi来解析文字方向，作用是兼容多国语言的排列方向，例如阿利伯文字排列是自右向左。
+    //里面主要调用native方法，具体可参考系统源码。
+    int paraDir = AndroidBidi.bidi(Layout.DIR_REQUEST_DEFAULT_LTR, buffer, levels, len,false /* no info */);
+    //使用p标签加dir属性修饰文本方向
+    switch(paraDir) {
+        case Layout.DIR_RIGHT_TO_LEFT:
+            return "<p dir=\"rtl\">";
+        case Layout.DIR_LEFT_TO_RIGHT:
+        default:
+            return "<p dir=\"ltr\">";
+    }
+}
+
+
+private static void withinBlockquote(StringBuilder out, Spanned text,int start, int end) {
+    //解析文本显示方向
+    out.append(getOpenParaTagWithDirection(text, start, end));
+    //回来
+    int next;
+    for (int i = start; i < end; i = next) {
+        next = TextUtils.indexOf(text, '\n', i, end);
+        if (next < 0) {
+           next = end;
+        }
+
+        int nl = 0;
+
+        while (next < end && text.charAt(next) == '\n') {
+            nl++;//统计换行符个数
+            next++;
+        }
+        //以一个换行符为一段进行解析
+        if (withinParagraph(out, text, i, next - nl, nl, next == end)) {
+           ...
+        }
+
+        ...
+}
+
+//代码较多，截取前部分
+//start为起始位置，end为除去换行符文本结尾位置，nl换行符个数，last是否为文本末尾
+private static boolean withinParagraph(StringBuilder out, Spanned text,
+                                        int start, int end, int nl,
+                                        boolean last) {
+        int next;
+        for (int i = start; i < end; i = next) {
+            next = text.nextSpanTransition(i, end, CharacterStyle.class);
+            CharacterStyle[] style = text.getSpans(i, next,
+                                                   CharacterStyle.class);
+
+            for (int j = 0; j < style.length; j++) {
+                if (style[j] instanceof StyleSpan) {
+                    int s = ((StyleSpan) style[j]).getStyle();
+
+                    if ((s & Typeface.BOLD) != 0) {
+                        out.append("<b>");
+                    }
+                    if ((s & Typeface.ITALIC) != 0) {
+                        out.append("<i>");
+                    }
+                }
+                if (style[j] instanceof TypefaceSpan) {
+                    String s = ((TypefaceSpan) style[j]).getFamily();
+
+                    if ("monospace".equals(s)) {
+                        out.append("<tt>");
+                    }
+                }
+                if (style[j] instanceof SuperscriptSpan) {
+                    out.append("<sup>");
+                }
+                if (style[j] instanceof SubscriptSpan) {
+                    out.append("<sub>");
+                }
+                if (style[j] instanceof UnderlineSpan) {
+                    out.append("<u>");
+                }
+                if (style[j] instanceof StrikethroughSpan) {
+                    out.append("<strike>");
+                }
+                if (style[j] instanceof URLSpan) {
+                    out.append("<a href=\"");
+                    out.append(((URLSpan) style[j]).getURL());
+                    out.append("\">");
+                }
+                if (style[j] instanceof ImageSpan) {
+                    out.append("<img src=\"");
+                    out.append(((ImageSpan) style[j]).getSource());
+                    out.append("\">");
+
+                    // Don't output the dummy character underlying the image.
+                    i = next;
+                }
+                if (style[j] instanceof AbsoluteSizeSpan) {
+                    out.append("<font size =\"");
+                    out.append(((AbsoluteSizeSpan) style[j]).getSize() / 6);
+                    out.append("\">");
+                }
+                if (style[j] instanceof ForegroundColorSpan) {
+                    out.append("<font color =\"#");
+                    String color = Integer.toHexString(((ForegroundColorSpan)
+                            style[j]).getForegroundColor() + 0x01000000);
+                    while (color.length() < 6) {
+                        color = "0" + color;
+                    }
+                    out.append(color);
+                    out.append("\">");
+                }
+            }
+
+            withinStyle(out, text, i, next);
+            ....
+        }
+    }
+
+```
