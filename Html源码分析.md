@@ -851,7 +851,7 @@ private void handleEndTag(String tag) {
 
 不要忽略了`parse`之后还有一部分代码。
 
-``java
+```java
     // 修正段落标记范围
     //ParagraphStyle为段落级别样式
     Object[] obj = mSpannableStringBuilder.getSpans(0, mSpannableStringBuilder.length(), ParagraphStyle.class);
@@ -888,12 +888,15 @@ private void handleEndTag(String tag) {
 `toHtml`方法是从大范围级别到小范围级别解析，即先解析段落样式再解析字符样式。
 
 ```java
+
 public static String toHtml(Spanned text) {
     StringBuilder out = new StringBuilder();
     withinHtml(out, text);
     return out.toString();
 }
 
+```
+```java
 private static void withinHtml(StringBuilder out, Spanned text) {
     int len = text.length();
     //遍历段落级别样式
@@ -929,6 +932,8 @@ private static void withinHtml(StringBuilder out, Spanned text) {
         //调用层次较深，先忽略后面
         ....
     }
+```
+```java
 
 //start为段落起点，end为结尾
 private static void withinDiv(StringBuilder out, Spanned text,int start, int end) {
@@ -947,6 +952,8 @@ private static void withinDiv(StringBuilder out, Spanned text,int start, int end
         ....
     }
 }
+```
+```java
 
 private static void withinBlockquote(StringBuilder out, Spanned text,int start, int end) {
     //解析文本显示方向
@@ -971,6 +978,8 @@ private static void withinBlockquote(StringBuilder out, Spanned text,int start, 
 
         ...
 }
+```
+```java
 
 private static String getOpenParaTagWithDirection(Spanned text, int start, int end) {
     final int len = end - start;
@@ -989,7 +998,8 @@ private static String getOpenParaTagWithDirection(Spanned text, int start, int e
             return "<p dir=\"ltr\">";
     }
 }
-
+```
+```java
 
 private static void withinBlockquote(StringBuilder out, Spanned text,int start, int end) {
     //解析文本显示方向
@@ -1015,6 +1025,8 @@ private static void withinBlockquote(StringBuilder out, Spanned text,int start, 
 
         ...
 }
+```
+```java
 
 //代码较多，截取前部分
 //start为起始位置，end为除去换行符文本结尾位置，nl换行符个数，last是否为文本末尾
@@ -1023,45 +1035,56 @@ private static boolean withinParagraph(StringBuilder out, Spanned text,
                                         boolean last) {
         int next;
         for (int i = start; i < end; i = next) {
+            //获取CharacterStyle样式
             next = text.nextSpanTransition(i, end, CharacterStyle.class);
             CharacterStyle[] style = text.getSpans(i, next,
                                                    CharacterStyle.class);
 
             for (int j = 0; j < style.length; j++) {
+                //StyleSpan样式
                 if (style[j] instanceof StyleSpan) {
                     int s = ((StyleSpan) style[j]).getStyle();
-
+                    //粗体使用b标签包裹
                     if ((s & Typeface.BOLD) != 0) {
                         out.append("<b>");
                     }
+                    //斜体使用i标签包裹
                     if ((s & Typeface.ITALIC) != 0) {
                         out.append("<i>");
                     }
                 }
+                //TypefaceSpan样式
                 if (style[j] instanceof TypefaceSpan) {
+                    //获取字体类型
                     String s = ((TypefaceSpan) style[j]).getFamily();
-
+                    //monospace使用tt标签包裹
                     if ("monospace".equals(s)) {
                         out.append("<tt>");
                     }
                 }
+                //上标样式使用sup标签包裹
                 if (style[j] instanceof SuperscriptSpan) {
                     out.append("<sup>");
                 }
+                //小标使用sub标签包裹
                 if (style[j] instanceof SubscriptSpan) {
                     out.append("<sub>");
                 }
+                //下划线使用u标签变过
                 if (style[j] instanceof UnderlineSpan) {
                     out.append("<u>");
                 }
+                //删除线使用strike标签
                 if (style[j] instanceof StrikethroughSpan) {
                     out.append("<strike>");
                 }
+                //urlspan使用a标签加href属性的标签包裹
                 if (style[j] instanceof URLSpan) {
                     out.append("<a href=\"");
                     out.append(((URLSpan) style[j]).getURL());
                     out.append("\">");
                 }
+                //图片使用img加src属性的标签包裹
                 if (style[j] instanceof ImageSpan) {
                     out.append("<img src=\"");
                     out.append(((ImageSpan) style[j]).getSource());
@@ -1070,11 +1093,14 @@ private static boolean withinParagraph(StringBuilder out, Spanned text,
                     // Don't output the dummy character underlying the image.
                     i = next;
                 }
+                //绝对大小样式使用font加size属性标签包裹
                 if (style[j] instanceof AbsoluteSizeSpan) {
                     out.append("<font size =\"");
                     out.append(((AbsoluteSizeSpan) style[j]).getSize() / 6);
                     out.append("\">");
                 }
+                //前景色使用font加color属性标签，只支持#
+                //不支持@描述的资源颜色，因为@使用TextAppearanceSpan类型
                 if (style[j] instanceof ForegroundColorSpan) {
                     out.append("<font color =\"#");
                     String color = Integer.toHexString(((ForegroundColorSpan)
@@ -1090,6 +1116,163 @@ private static boolean withinParagraph(StringBuilder out, Spanned text,
             withinStyle(out, text, i, next);
             ....
         }
+}
+```
+```java
+
+    //将字符进行转码
+    private static void withinStyle(StringBuilder out, CharSequence text,
+                                    int start, int end) {
+        for (int i = start; i < end; i++) {
+            char c = text.charAt(i);
+            //将<  >  & '空格' 变成转译字符
+            if (c == '<') {
+                out.append("&lt;");
+            } else if (c == '>') {
+                out.append("&gt;");
+            } else if (c == '&') {
+                out.append("&amp;");
+            } else if (c >= 0xD800 && c <= 0xDFFF) {//代理区域
+                //java使用的是Unicode编码，所以有一个代理区的概念，主要作用是扩展字符集
+                //只支持代理区
+                if (c < 0xDC00 && i + 1 < end) {
+                    char d = text.charAt(i + 1);
+                    if (d >= 0xDC00 && d <= 0xDFFF) {
+                        i++;
+                        int codepoint = 0x010000 | (int) c - 0xD800 << 10 | (int) d - 0xDC00;
+                        out.append("&#").append(codepoint).append(";");
+                    }
+                }
+            } else if (c > 0x7E || c < ' ') {
+                out.append("&#").append((int) c).append(";");
+            } else if (c == ' ') {
+                //多个空格转译为&nbsp;
+                while (i + 1 < end && text.charAt(i + 1) == ' ') {
+                    out.append("&nbsp;");
+                    i++;
+                }
+
+                out.append(' ');
+            } else {
+                out.append(c);
+            }
+        }
     }
+```
+```java
+
+//跳出withinStyle接着回到withinParagraph方法
+private static boolean withinParagraph(StringBuilder out, Spanned text,
+                                        int start, int end, int nl,
+                                        boolean last) {
+    ...
+    //接下来很好理解，把上面包裹的标签闭合
+    for (int j = style.length - 1; j >= 0; j--) {
+                if (style[j] instanceof ForegroundColorSpan) {
+                    out.append("</font>");
+                }
+                if (style[j] instanceof AbsoluteSizeSpan) {
+                    out.append("</font>");
+                }
+                if (style[j] instanceof URLSpan) {
+                    out.append("</a>");
+                }
+                if (style[j] instanceof StrikethroughSpan) {
+                    out.append("</strike>");
+                }
+                if (style[j] instanceof UnderlineSpan) {
+                    out.append("</u>");
+                }
+                if (style[j] instanceof SubscriptSpan) {
+                    out.append("</sub>");
+                }
+                if (style[j] instanceof SuperscriptSpan) {
+                    out.append("</sup>");
+                }
+                if (style[j] instanceof TypefaceSpan) {
+                    String s = ((TypefaceSpan) style[j]).getFamily();
+
+                    if (s.equals("monospace")) {
+                        out.append("</tt>");
+                    }
+                }
+                if (style[j] instanceof StyleSpan) {
+                    int s = ((StyleSpan) style[j]).getStyle();
+
+                    if ((s & Typeface.BOLD) != 0) {
+                        out.append("</b>");
+                    }
+                    if ((s & Typeface.ITALIC) != 0) {
+                        out.append("</i>");
+                    }
+                }
+            }
+        }
+
+        //添加br标签
+        if (nl == 1) {
+            out.append("<br>\n");
+            return false;
+        } else {
+            for (int i = 2; i < nl; i++) {
+                out.append("<br>");
+            }
+            return !last;
+        }
+    }
+```
+```java
+
+//跳出withinParagraph回到withinBlockquote剩下部分
+private static void withinBlockquote(StringBuilder out, Spanned text,int start, int end) {
+    ...
+    if (withinParagraph(out, text, i, next - nl, nl, next == end)) {
+        /* 闭合p标签 */
+        out.append("</p>\n");
+        out.append(getOpenParaTagWithDirection(text, next, end));//判断字符排列顺序，添加p标签
+    }
+    //闭合p标签
+    out.append("</p>\n");
+
+}
+```
+```java
+
+private static void withinDiv(StringBuilder out, Spanned text,
+            int start, int end) {
+        ...
+        withinBlockquote(out, text, i, next);
+        //逐个闭合
+        for (QuoteSpan quote : quotes) {
+            out.append("</blockquote>\n");
+        }
+    }
+}
+```
+```java
+
+private static void withinHtml(StringBuilder out, Spanned text) {
+    ...
+    withinDiv(out, text, i, next);
+    //按需要添加闭合div标签，即有AlignmentSpan类型样式
+    if (needDiv) {
+        out.append("</div>");
+    }
+}
 
 ```
+
+### 3、7 escapeHtml解析
+
+```java
+public static String escapeHtml(CharSequence text) {
+        StringBuilder out = new StringBuilder();
+        //直接调用withinStyle方法进行转译
+        withinStyle(out, text, 0, text.length());
+        return out.toString();
+    }
+```
+
+## 4、总结
+
+`Html.fromHtml`主要是使用SAX解析HTML标签，使用Spanned为TextView提供强大的富文本支持，还可以通过定制TagHandler来扩展自定义标签，ImageGetter加载自定义图片资源，感兴趣的读者可到`android.text.style`包中继续探究其他支持的样式，`toHtml`主要做了反向解析，`escapeHtml`只调用`withinStyle`方法，里面涉及到编码转换，关于编码方面可参考[Java中char和String 的深入理解 - 字符编码](http://blog.csdn.net/u010297957/article/details/48495791)，第一次写源码分析文章，如有差错处，欢迎吐槽。

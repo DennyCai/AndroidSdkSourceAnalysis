@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>android.text.style.StyleSpan</OriginalElement>
+  <nodes>
+    <node x="287.08674506387916" y="472.0">android.text.style.URLSpan</node>
+    <node x="126.5" y="80.0">android.text.style.ParagraphStyle</node>
+    <node x="814.0" y="80.0">android.os.Parcelable</node>
+    <node x="1715.0333333333335" y="472.0">android.text.style.ImageSpan</node>
+    <node x="1363.8666666666668" y="80.0">android.text.style.UpdateLayout</node>
+    <node x="1396.1761904761906" y="472.0">android.text.style.StyleSpan</node>
+    <node x="601.6458333333335" y="472.0">android.text.style.UnderlineSpan</node>
+    <node x="1308.6166666666668" y="226.0">android.text.style.MetricAffectingSpan</node>
+    <node x="1049.1166666666668" y="472.0">android.text.style.RelativeSizeSpan</node>
+    <node x="1198.1166666666668" y="472.0">android.text.style.TypefaceSpan</node>
+    <node x="91.87033972125425" y="472.0">android.text.style.QuoteSpan</node>
+    <node x="416.52424506387916" y="0.0">android.text.style.UpdateAppearance</node>
+    <node x="112.0" y="226.0">android.text.style.LeadingMarginSpan</node>
+    <node x="759.0583333333334" y="472.0">android.text.style.SuperscriptSpan</node>
+    <node x="906.0583333333334" y="472.0">android.text.style.SubscriptSpan</node>
+    <node x="625.7708333333335" y="80.0">android.text.style.CharacterStyle</node>
+    <node x="1504.1761904761906" y="472.0">android.text.style.TextAppearanceSpan</node>
+    <node x="406.24192799070846" y="472.0">android.text.style.ForegroundColorSpan</node>
+    <node x="799.5" y="226.0">android.text.ParcelableSpan</node>
+  </nodes>
+  <notes>
+    <note x="138.15819567979668" y="43.82337992376114">
+      <node>android.text.style.ParagraphStyle</node>
+      <value>段落级别样式</value>
+      <edge>
+        <point x="0.0" y="-15.0" />
+        <point x="0.0" y="14.5" />
+      </edge>
+    </note>
+    <note x="287.85451080050825" y="513.2382465057178">
+      <node>android.text.style.URLSpan</node>
+      <value>对应标签\na</value>
+      <edge>
+        <point x="-10.5" y="-15.0" />
+        <point x="318.58674506387916" y="528.4574332909784" />
+        <point x="317.17090216010166" y="537.8246505717916" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+    <note x="1713.5517577297758" y="514.4091486658195">
+      <node>android.text.style.ImageSpan</node>
+      <value>对应标签\nimg</value>
+      <edge>
+        <point x="24.5" y="-15.0" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+    <note x="1412.0461457009744" y="512.4415501905971">
+      <node>android.text.style.StyleSpan</node>
+      <value>对应标签\nstrong\nb\nem\ncite\ndfn\ni\nh1-6</value>
+      <edge>
+        <point x="29.333333333333258" y="-15.0" />
+        <point x="1447.2623827675923" y="483.6143583227446" />
+        <point x="1441.3625370605678" y="484.7852604828463" />
+        <point x="0.0" y="81.0" />
+      </edge>
+    </note>
+    <note x="620.3167354934351" y="513.2382465057178">
+      <node>android.text.style.UnderlineSpan</node>
+      <value>对应标签\nu</value>
+      <edge>
+        <point x="-14.625" y="-15.0" />
+        <point x="647.8626376535367" y="490.9885641677256" />
+        <point x="650.8040290131302" y="492.1594663278271" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+    <note x="1080.7875688267684" y="515.3144853875476">
+      <node>android.text.style.RelativeSizeSpan</node>
+      <value>对应标签\nbig\nsmall\nh1-6</value>
+      <edge>
+        <point x="0.0" y="-15.0" />
+        <point x="0.0" y="43.0" />
+      </edge>
+    </note>
+    <note x="1218.9336107987374" y="516.7509529860229">
+      <node>android.text.style.TypefaceSpan</node>
+      <value>对应标签\ntt</value>
+      <edge>
+        <point x="0.0" y="-15.0" />
+        <point x="1258.1293731469716" y="486.9377382465058" />
+        <point x="1251.7627086386358" y="490.4504447268107" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+    <note x="91.33036848792884" y="510.8964421855146">
+      <node>android.text.style.QuoteSpan</node>
+      <value>对应标签\nblockquote `</value>
+      <edge>
+        <point x="-32.33333333333334" y="-15.0" />
+        <point x="109.20790854802253" y="529.279542566709" />
+        <point x="111.5705209656925" y="525.766836086404" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+    <note x="761.848792884371" y="513.2382465057178">
+      <node>android.text.style.SuperscriptSpan</node>
+      <value>对应标签\nsup</value>
+      <edge>
+        <point x="-42.33333333333326" y="-15.0" />
+        <point x="801.3012388818299" y="494.5012706480305" />
+        <point x="787.6524777636595" y="490.9885641677256" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+    <note x="639.8406364234725" y="47.33608640406612">
+      <node>android.text.style.CharacterStyle</node>
+      <value>字符级别样式</value>
+      <edge>
+        <point x="0.0" y="-15.0" />
+        <point x="683.2708333333335" y="60.0" />
+        <point x="690.5242450638791" y="60.0" />
+        <point x="0.0" y="14.5" />
+      </edge>
+    </note>
+    <note x="912.9430114358323" y="508.5546378653113">
+      <node>android.text.style.SubscriptSpan</node>
+      <value>对应标签\nsub</value>
+      <edge>
+        <point x="0.0" y="-15.0" />
+        <point x="949.5075074121136" y="491.6213468869123" />
+        <point x="951.626620076239" y="490.4504447268106" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+    <note x="1516.2143099171053" y="512.8939008894536">
+      <node>android.text.style.TextAppearanceSpan</node>
+      <value>对应标签\nfont color='@资源名称'</value>
+      <edge>
+        <point x="51.66666666666674" y="-15.0" />
+        <point x="1629.8301506625523" y="487.1270648030495" />
+        <point x="1630.4316814908939" y="496.4942820838628" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+    <note x="389.02541296060986" y="512.0673443456162">
+      <node>android.text.style.ForegroundColorSpan</node>
+      <value>标签\nfont color='#XXXXXX'属性 `</value>
+      <edge>
+        <point x="-20.25" y="-15.0" />
+        <point x="463.4792215104035" y="489.8176620076239" />
+        <point x="471.17090216010166" y="493.3303684879288" />
+        <point x="0.0" y="24.0" />
+      </edge>
+    </note>
+  </notes>
+  <edges>
+    <edge source="android.text.style.RelativeSizeSpan" target="android.text.style.MetricAffectingSpan">
+      <point x="43.0" y="-15.0" />
+      <point x="1156.6166666666668" y="442.0" />
+      <point x="1361.8309523809526" y="442.0" />
+      <point x="-21.28571428571422" y="15.0" />
+    </edge>
+    <edge source="android.text.style.StyleSpan" target="android.text.ParcelableSpan">
+      <point x="-29.333333333333258" y="-15.0" />
+      <point x="1410.8428571428572" y="382.0" />
+      <point x="902.3499999999999" y="382.0" />
+      <point x="42.34999999999991" y="15.0" />
+    </edge>
+    <edge source="android.text.style.TypefaceSpan" target="android.text.style.MetricAffectingSpan">
+      <point x="37.66666666666674" y="-15.0" />
+      <point x="1292.2833333333335" y="452.0" />
+      <point x="1383.1166666666668" y="452.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="android.text.style.UpdateLayout" target="android.text.style.UpdateAppearance">
+      <point x="0.0" y="-15.0" />
+      <point x="1420.3666666666668" y="50.0" />
+      <point x="543.3992450638791" y="50.0" />
+      <point x="54.375" y="15.0" />
+    </edge>
+    <edge source="android.text.style.LeadingMarginSpan" target="android.text.style.ParagraphStyle">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="android.text.style.ForegroundColorSpan" target="android.text.style.CharacterStyle">
+      <point x="20.25" y="-15.0" />
+      <point x="507.49192799070846" y="402.0" />
+      <point x="568.5" y="402.0" />
+      <point x="568.5" y="140.0" />
+      <point x="668.8958333333335" y="140.0" />
+      <point x="-14.375" y="15.0" />
+    </edge>
+    <edge source="android.text.style.QuoteSpan" target="android.text.ParcelableSpan">
+      <point x="32.33333333333334" y="-15.0" />
+      <point x="172.70367305458763" y="412.0" />
+      <point x="805.55" y="412.0" />
+      <point x="-54.450000000000045" y="15.0" />
+    </edge>
+    <edge source="android.text.style.MetricAffectingSpan" target="android.text.style.UpdateLayout">
+      <point x="37.25" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="android.text.style.SubscriptSpan" target="android.text.style.MetricAffectingSpan">
+      <point x="38.33333333333337" y="-15.0" />
+      <point x="1001.8916666666669" y="432.0" />
+      <point x="1340.5452380952381" y="432.0" />
+      <point x="-42.57142857142867" y="15.0" />
+    </edge>
+    <edge source="android.text.style.URLSpan" target="android.text.style.CharacterStyle">
+      <point x="10.5" y="-15.0" />
+      <point x="339.58674506387916" y="402.0" />
+      <point x="360.5" y="402.0" />
+      <point x="360.5" y="130.0" />
+      <point x="640.1458333333335" y="130.0" />
+      <point x="-43.125" y="15.0" />
+    </edge>
+    <edge source="android.text.style.RelativeSizeSpan" target="android.text.ParcelableSpan">
+      <point x="-43.0" y="-15.0" />
+      <point x="1070.6166666666668" y="402.0" />
+      <point x="878.15" y="402.0" />
+      <point x="18.149999999999977" y="15.0" />
+    </edge>
+    <edge source="android.text.style.MetricAffectingSpan" target="android.text.style.CharacterStyle">
+      <point x="-37.25" y="-15.0" />
+      <point x="1345.8666666666668" y="140.0" />
+      <point x="726.3958333333335" y="140.0" />
+      <point x="43.125" y="15.0" />
+    </edge>
+    <edge source="android.text.style.SuperscriptSpan" target="android.text.style.MetricAffectingSpan">
+      <point x="42.33333333333326" y="-15.0" />
+      <point x="864.8916666666667" y="422.0" />
+      <point x="1319.259523809524" y="422.0" />
+      <point x="-63.85714285714289" y="15.0" />
+    </edge>
+    <edge source="android.text.style.SubscriptSpan" target="android.text.ParcelableSpan">
+      <point x="-38.33333333333337" y="-15.0" />
+      <point x="925.2250000000001" y="412.0" />
+      <point x="866.05" y="412.0" />
+      <point x="6.0499999999999545" y="15.0" />
+    </edge>
+    <edge source="android.text.style.StyleSpan" target="android.text.style.MetricAffectingSpan">
+      <point x="0.0" y="-15.0" />
+      <point x="1440.1761904761906" y="372.0" />
+      <point x="1404.402380952381" y="372.0" />
+      <point x="21.28571428571422" y="15.0" />
+    </edge>
+    <edge source="android.text.ParcelableSpan" target="android.os.Parcelable">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="android.text.style.UnderlineSpan" target="android.text.ParcelableSpan">
+      <point x="43.875" y="-15.0" />
+      <point x="704.0208333333335" y="442.0" />
+      <point x="841.85" y="442.0" />
+      <point x="-18.149999999999977" y="15.0" />
+    </edge>
+    <edge source="android.text.style.UnderlineSpan" target="android.text.style.UpdateAppearance">
+      <point x="-43.875" y="-15.0" />
+      <point x="616.2708333333335" y="402.0" />
+      <point x="583.5625" y="402.0" />
+      <point x="583.5625" y="60.0" />
+      <point x="507.14924506387916" y="60.0" />
+      <point x="18.125" y="15.0" />
+    </edge>
+    <edge source="android.text.style.UnderlineSpan" target="android.text.style.CharacterStyle">
+      <point x="14.625" y="-15.0" />
+      <point x="674.7708333333335" y="402.0" />
+      <point x="697.6458333333335" y="402.0" />
+      <point x="14.375" y="15.0" />
+    </edge>
+    <edge source="android.text.style.QuoteSpan" target="android.text.style.LeadingMarginSpan">
+      <point x="0.0" y="-15.0" />
+      <point x="140.37033972125425" y="402.0" />
+      <point x="186.5" y="402.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="android.text.style.ForegroundColorSpan" target="android.text.ParcelableSpan">
+      <point x="60.75" y="-15.0" />
+      <point x="547.9919279907085" y="432.0" />
+      <point x="829.75" y="432.0" />
+      <point x="-30.25" y="15.0" />
+    </edge>
+    <edge source="android.text.style.ImageSpan" target="android.text.style.MetricAffectingSpan">
+      <point x="-24.5" y="-15.0" />
+      <point x="1739.5333333333335" y="342.0" />
+      <point x="1446.9738095238097" y="342.0" />
+      <point x="63.85714285714289" y="15.0" />
+    </edge>
+    <edge source="android.text.style.URLSpan" target="android.text.ParcelableSpan">
+      <point x="31.5" y="-15.0" />
+      <point x="360.58674506387916" y="422.0" />
+      <point x="817.65" y="422.0" />
+      <point x="-42.35000000000002" y="15.0" />
+    </edge>
+    <edge source="android.text.style.TextAppearanceSpan" target="android.text.ParcelableSpan">
+      <point x="-51.66666666666674" y="-15.0" />
+      <point x="1530.0095238095237" y="362.0" />
+      <point x="914.4499999999999" y="362.0" />
+      <point x="54.44999999999993" y="15.0" />
+    </edge>
+    <edge source="android.text.style.URLSpan" target="android.text.style.UpdateAppearance">
+      <point x="-31.5" y="-15.0" />
+      <point x="297.58674506387916" y="402.0" />
+      <point x="271.5" y="402.0" />
+      <point x="271.5" y="50.0" />
+      <point x="434.64924506387916" y="50.0" />
+      <point x="-54.375" y="15.0" />
+    </edge>
+    <edge source="android.text.style.TextAppearanceSpan" target="android.text.style.MetricAffectingSpan">
+      <point x="0.0" y="-15.0" />
+      <point x="1581.6761904761906" y="352.0" />
+      <point x="1425.6880952380955" y="352.0" />
+      <point x="42.57142857142867" y="15.0" />
+    </edge>
+    <edge source="android.text.style.SuperscriptSpan" target="android.text.ParcelableSpan">
+      <point x="0.0" y="-15.0" />
+      <point x="822.5583333333334" y="452.0" />
+      <point x="853.95" y="452.0" />
+      <point x="-6.0499999999999545" y="15.0" />
+    </edge>
+    <edge source="android.text.style.TypefaceSpan" target="android.text.ParcelableSpan">
+      <point x="-37.66666666666674" y="-15.0" />
+      <point x="1216.95" y="392.0" />
+      <point x="890.25" y="392.0" />
+      <point x="30.25" y="15.0" />
+    </edge>
+    <edge source="android.text.style.ForegroundColorSpan" target="android.text.style.UpdateAppearance">
+      <point x="-60.75" y="-15.0" />
+      <point x="426.49192799070846" y="402.0" />
+      <point x="371.5" y="402.0" />
+      <point x="371.5" y="60.0" />
+      <point x="470.89924506387916" y="60.0" />
+      <point x="-18.125" y="15.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.9030407343660356" x="952.5" y="337.5" />
+  <SelectedNodes />
+  <Categories />
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

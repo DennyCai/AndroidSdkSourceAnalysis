@@ -49,8 +49,9 @@ public class MainActivity extends AppCompatActivity implements ContentHandler {
         setContentView(R.layout.activity_main);
         TextView textView = (TextView) findViewById(R.id.tv);
 //        WebView wv = (WebView) findViewById(R.id.wv);
+//        startActivity();
         String htmlString =
-                "<font color='#ff0000'> 颜色</font><br/>" +
+                "<font color='#ff0000'> 颜     5&nbsp;&nbsp;&nbsp;3色</font><br/>" +
                         "<a href='http://www.baidu.com'>  链接</a><>br/>" +
                         "<big>大字体   </big><br/>"+
                         "<small>小 字体</small>"+
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements ContentHandler {
         };
 //        Spannable.SPAN_PARAGRAPH
 //        "<br/><custom>自定义标签</custom>"
+        Spanned
         textView.setText( Html.toHtml(Html.fromHtml(htmlString,getter,tagHandler)));
 //        wv.loadData(Html.toHtml(Html.fromHtml(htmlString)),"text/html", "utf-8");
 //        System.out.println(Html.escapeHtml(Html.toHtml(Html.fromHtml(htmlString))));
